@@ -1,12 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Media.Animation;
 using System.Windows.Threading;
 
 namespace ZipCompression
@@ -17,11 +12,14 @@ namespace ZipCompression
         private ZipEventSource zipEventIns;
         private MainWindow window;
         private TextBlock textBlock = new TextBlock();
+        private DateTime startCompressionTime;
         public static readonly DependencyProperty progressProperty = DependencyProperty.Register("progress", typeof(int), typeof(ZipEventListener));
         public ZipEventListener (MainWindow window, ZipEventSource zipEventIns)
         {
             this.zipEventIns = zipEventIns;
             this.window = window;
+            textBlock.Text = "就绪";
+            window.SBar.Items.Add(textBlock);
         }
 
         public int progress
@@ -66,18 +64,18 @@ namespace ZipCompression
             
             if (progress == 100)
             {
-                Off();
                 window.SBar.Items.Remove(PBar);
-                textBlock.Text = "压缩完成";
-                window.SBar.Items.Add(textBlock);
+                textBlock.Text = "压缩完成,用时" + (int)Math.Ceiling((DateTime.Now - startCompressionTime).TotalSeconds) + "秒";
+                
             }
             else
             {
-                window.SBar.Items.Remove(textBlock);
+                textBlock.Text = "正在压缩 " + progress + "%";
             }
             if (eventArgs.EventValue == ZipEventSource.ZipEventValue.COMPRESS)
             {
                 createPrgressBar();
+                startCompressionTime = DateTime.Now;
             }
            else if (eventArgs.EventValue == ZipEventSource.ZipEventValue.UPDATE_BAR)
             {
@@ -101,7 +99,6 @@ namespace ZipCompression
 
         private void updatePrgressBar(DependencyProperty dp, double value)
         {
-            //PBar.SetValue(dp, (int)value);
             PBar.Value = value;
         }
         private int getProgressPercent(DependencyProperty dp)

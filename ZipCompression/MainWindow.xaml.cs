@@ -95,6 +95,7 @@ namespace ZipCompression
                 
             }
             fileView.DataContext = observalbleObject;
+            setButnIsEnabled(true);
         }
         private void importDirectoryFilesToList()
         {
@@ -106,6 +107,15 @@ namespace ZipCompression
                 string[] files = Directory.GetFileSystemEntries(path);
                 setListViewItems(files);
             }
+        }
+        /// <summary>
+        /// 设置启用或禁用压缩和移除按钮
+        /// </summary>
+        /// <param name="isEnabled">true 启用，false 禁用</param>
+        private void setButnIsEnabled(bool isEnabled)
+        {
+            butn_compress.IsEnabled = isEnabled;
+            butn_remove.IsEnabled = isEnabled;
         }
         private void importFileToList()
         {
@@ -132,7 +142,7 @@ namespace ZipCompression
             if (openFileDialog.ShowDialog() == true)
             {
                 string[] files = openFileDialog.FileNames;
-                
+                setButnIsEnabled(true);
                 foreach (string file in files)
                 {
                     bool isExists = false;
@@ -178,15 +188,15 @@ namespace ZipCompression
             saveFileDialog.InitialDirectory = "c:\\";
             saveFileDialog.OverwritePrompt = true;
             saveFileDialog.ValidateNames = true;
-            saveFileDialog.Title = "压缩love文件至...";
-            saveFileDialog.Filter = "love2d 执行文件(love)|*.love|zip 压缩文件(zip)|*.zip";
+            saveFileDialog.Title = "压缩文件至...";
+            saveFileDialog.Filter = "zip 压缩文件(zip)|*.zip|love2d 执行文件(love)|*.love";
             string[] prepareToCompressFiles = new string[fileView.Items.Count];
             byte count = 0;
             foreach (FileInfoView listItem in fileView.Items)
             {
                 prepareToCompressFiles[count++] = listItem.FullName;
             }
-            System.Diagnostics.Debug.Assert(count > 0, "list view  is empty");
+            System.Diagnostics.Debug.Assert(count > 0, "压缩文件列表为空");
             if (saveFileDialog.ShowDialog() == true)
             {
                 CompressTo compress = new CompressTo(zipUtil.compressTo);
@@ -198,7 +208,7 @@ namespace ZipCompression
         {
             if (typeof(System.Windows.Controls.Button).Equals(sender.GetType()))
             {
-                System.Windows.Controls.Button butn = (System.Windows.Controls.Button)sender;
+                Button butn = sender as Button;
                 if (butn == butn_add)
                 {
                     addFileToList();
@@ -213,6 +223,10 @@ namespace ZipCompression
                     while (fileView.SelectedItems.Count > 0)
                     {
                         itemsCollection.Remove((FileInfoView)fileView.SelectedItem);
+                    }
+                    if (!fileView.HasItems)
+                    {
+                        setButnIsEnabled(false);
                     }
                 }
                 else if (butn == butn_compress)
@@ -296,12 +310,12 @@ namespace ZipCompression
                     ZipEntry entry = new ZipEntry(parentFolder + System.IO.Path.GetFileName(file));
                     entry.DateTime = DateTime.Now;
                     outs.PutNextEntry(entry);
-                    using (FileStream fs = File.OpenRead(file))
+                    using (BufferedStream bs = new BufferedStream (File.OpenRead(file)))
                     {
                         int sourceBytes;
                         do
                         {
-                            sourceBytes = fs.Read(buffer, 0, buffer.Length);
+                            sourceBytes = bs.Read(buffer, 0, buffer.Length);
                             outs.Write(buffer, 0, sourceBytes);
                             compressedSize += sourceBytes;
                             RaiseEvent(ZipEventValue.UPDATE_BAR);
