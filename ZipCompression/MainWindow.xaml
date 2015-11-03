@@ -1,0 +1,53 @@
+﻿<Window x:Class="ZipCompression.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:ZipCompression"
+        mc:Ignorable="d"
+        Title="压缩器" Height="359.052" Width="535.057">
+    
+   
+    <Grid Margin="0,0,0,-3">
+        <Menu x:Name="menu" HorizontalAlignment="Stretch" Height="22" VerticalAlignment="Top">
+            <MenuItem Header="文件" Width="40">
+                <MenuItem Header="打开" HorizontalAlignment="Left" Width="150" Click="MenuItem_Click"/>
+                <MenuItem Header="打开文件夹" HorizontalAlignment="Left" Width="150" Click="MenuItem_Click"/>
+                <MenuItem Header="打包到..." HorizontalAlignment="Left" Width="150" Click="MenuItem_Click"/>
+                <MenuItem Header="退出" HorizontalAlignment="Left" Width="150" Click="MenuItem_Click"/>
+            </MenuItem>
+            <MenuItem Header="编辑" Width="40"/>
+        </Menu>
+        <ListView x:Name="fileView" HorizontalAlignment="Stretch"  Margin="0,22,0,151" VerticalAlignment="Stretch"  
+                  ItemsSource="{Binding}" ScrollViewer.VerticalScrollBarVisibility="Auto" >
+            <ListView.Resources>
+                <DataTemplate x:Key="IconTemplate">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"></ColumnDefinition>
+                            <ColumnDefinition></ColumnDefinition>
+                        </Grid.ColumnDefinitions>
+                        <Image Grid.Column="0" Source="{Binding Path=FileIcon}"></Image>
+                        <TextBlock Grid.Column="1" Text="{Binding Path=FileName}"/>
+                    </Grid>
+                </DataTemplate>
+            </ListView.Resources>
+            <ListView.View>
+                <GridView>
+                    <GridViewColumn Header="文件名" Width="200"  CellTemplate="{StaticResource IconTemplate}"/>
+                    <GridViewColumn Header="修改日期" Width="150" DisplayMemberBinding="{Binding Path=UpdateDate}"/>
+                    <GridViewColumn Header="类型" Width="100" DisplayMemberBinding="{Binding Path=Type}"/>
+                    <GridViewColumn Header="大小" Width='60' DisplayMemberBinding="{Binding Path=Size}"/>
+                </GridView>
+            </ListView.View>
+        </ListView>
+        <Button x:Name="butn_add" Content="Add File" HorizontalAlignment="Stretch" Height="27" Margin="46,268,366,28" VerticalAlignment="Stretch" Click="button_Click"/>
+        <Button x:Name="butn_remove" Content="Remove File" HorizontalAlignment="Stretch" Margin="205,268,207,28" VerticalAlignment="Stretch" Height="27" Click="button_Click"/>
+        <Button x:Name="butn_compress" Content="Compress To..." HorizontalAlignment="Stretch" Height="27" Margin="371,268,49,28" VerticalAlignment="Stretch"  Click="button_Click"/>
+        <StatusBar x:Name="SBar" Grid.Column="0" Grid.Row="5" VerticalAlignment="Bottom" Background="LightBlue"  >
+            <StatusBarItem>
+                <TextBlock>状态:</TextBlock>
+            </StatusBarItem>
+        </StatusBar>
+    </Grid>
+</Window>
