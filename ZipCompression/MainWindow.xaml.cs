@@ -43,9 +43,9 @@ namespace ZipCompression
         private void MenuItem_Click(object sender, RoutedEventArgs e)
         {
 
-           if (typeof(System.Windows.Controls.MenuItem).Equals(sender.GetType()))
+           if (sender is MenuItem)
             {
-                System.Windows.Controls.MenuItem item = (System.Windows.Controls.MenuItem)sender;
+                MenuItem item = sender as MenuItem;
                 if (item.Header.Equals("打开"))
                 {
                     importFileToList();
@@ -66,37 +66,6 @@ namespace ZipCompression
             
         }
 
-        private void setListViewItems (string[] files)
-        {
-            ObservableCollection<FileInfoView> observalbleObject = new ObservableCollection<FileInfoView>();
-            foreach (string file in files)
-            {
-                if (Directory.Exists(file))
-                {
-                    DirectoryInfo directoryInfo = new DirectoryInfo(file);
-                    Icon icon = null;
-                    if (directoryInfo.Name == directoryInfo.FullName)
-                    {
-                        icon = WindowsFileSystemInfo.GetDriverIcon(directoryInfo.Name.First(), true);
-                    }
-                    else
-                    {
-                        icon = WindowsFileSystemInfo.GetFolderIcon(true);
-                    }
-                    observalbleObject.Add(new FileInfoView(directoryInfo.Name, icon, "N/A",
-                        directoryInfo.FullName, WindowsFileSystemInfo.GetTypeName(directoryInfo.FullName,true), directoryInfo.LastWriteTime.ToLocalTime().ToString()));
-                }
-                else if (File.Exists(file))
-                {
-                   FileInfo fileInfo = new FileInfo(file);
-                    observalbleObject.Add(new FileInfoView(fileInfo.Name, WindowsFileSystemInfo.GetFileIcon(fileInfo.FullName, true), calculateFileSize(fileInfo.Length),
-                        fileInfo.FullName, WindowsFileSystemInfo.GetTypeName(fileInfo.FullName), fileInfo.LastWriteTime.ToLocalTime().ToString()));
-                }
-                
-            }
-            fileView.DataContext = observalbleObject;
-            setButnIsEnabled(true);
-        }
         private void importDirectoryFilesToList()
         {
             System.Windows.Forms.FolderBrowserDialog folderDialog = new System.Windows.Forms.FolderBrowserDialog();
@@ -105,7 +74,8 @@ namespace ZipCompression
             {
                 string path = folderDialog.SelectedPath;
                 string[] files = Directory.GetFileSystemEntries(path);
-                setListViewItems(files);
+                addFileToList(files);
+                if (fileView.HasItems) setButnIsEnabled(true);
             }
         }
         /// <summary>
@@ -125,7 +95,8 @@ namespace ZipCompression
             if (openFileDialog.ShowDialog() == true)
             {
                 string[] files = openFileDialog.FileNames;
-                setListViewItems(files);
+                addFileToList(files);
+                setButnIsEnabled(true);
             }
         }
 
@@ -134,51 +105,42 @@ namespace ZipCompression
             return Math.Ceiling(length / 1024d).ToString() + "KB";
         }
 
-        private void addFileToList()
+        private void addFileToList(string[] files)
         {
-            OpenFileDialog openFileDialog = new OpenFileDialog();
-            openFileDialog.InitialDirectory = "c:\\";
-            openFileDialog.Multiselect = true;
-            if (openFileDialog.ShowDialog() == true)
+            foreach (string file in files)
             {
-                string[] files = openFileDialog.FileNames;
-                setButnIsEnabled(true);
-                foreach (string file in files)
+                bool isExists = false;
+                foreach (FileInfoView item in fileView.Items)
                 {
-                    bool isExists = false;
-                    foreach (FileInfoView item in fileView.Items)
+                    if (file.Equals(item.FullName))
                     {
-                        if (file.Equals(item.FullName))
-                        {
-                            isExists = true;
-                            break;       
-                        }
-                    }
-                    if (isExists) continue;
-                    if (File.Exists(file))
-                    {
-                        FileInfo fileInfo = new FileInfo(file);
-                        fileView.Items.Add(new FileInfoView(fileInfo.Name, WindowsFileSystemInfo.GetFileIcon(fileInfo.FullName, true),
-                            calculateFileSize(fileInfo.Length), 
-                            fileInfo.FullName, WindowsFileSystemInfo.GetTypeName(fileInfo.FullName), fileInfo.LastWriteTime.ToLocalTime().ToString()));    
-                    }
-                    else if(Directory.Exists(file))
-                    {
-                        DirectoryInfo directoryInfo = new DirectoryInfo(file);
-                        Icon icon = null;
-                        if (directoryInfo.Name == directoryInfo.FullName)
-                        {
-                            icon = WindowsFileSystemInfo.GetDriverIcon(directoryInfo.Name.First(), true);
-                        }
-                        else
-                        {
-                            icon = WindowsFileSystemInfo.GetFolderIcon(true);
-                        }
-                        fileView.Items.Add(new FileInfoView(directoryInfo.Name, icon, "N/A",
-                            directoryInfo.FullName, WindowsFileSystemInfo.GetTypeName(directoryInfo.FullName, true), directoryInfo.LastWriteTime.ToLocalTime().ToString()));
+                        isExists = true;
+                        break;
                     }
                 }
-                
+                if (isExists) continue;
+                if (File.Exists(file))
+                {
+                    FileInfo fileInfo = new FileInfo(file);
+                    fileView.Items.Add(new FileInfoView(fileInfo.Name, WindowsFileSystemInfo.GetFileIcon(fileInfo.FullName, true),
+                        calculateFileSize(fileInfo.Length),
+                        fileInfo.FullName, WindowsFileSystemInfo.GetTypeName(fileInfo.FullName), fileInfo.LastWriteTime.ToLocalTime().ToString()));
+                }
+                else if (Directory.Exists(file))
+                {
+                    DirectoryInfo directoryInfo = new DirectoryInfo(file);
+                    Icon icon = null;
+                    if (directoryInfo.Name == directoryInfo.FullName)
+                    {
+                        icon = WindowsFileSystemInfo.GetDriverIcon(directoryInfo.Name.First(), true);
+                    }
+                    else
+                    {
+                        icon = WindowsFileSystemInfo.GetFolderIcon(true);
+                    }
+                    fileView.Items.Add(new FileInfoView(directoryInfo.Name, icon, "N/A",
+                        directoryInfo.FullName, WindowsFileSystemInfo.GetTypeName(directoryInfo.FullName, true), directoryInfo.LastWriteTime.ToLocalTime().ToString()));
+                }
             }
         }
 
@@ -206,23 +168,18 @@ namespace ZipCompression
 
         private void button_Click(object sender, RoutedEventArgs e)
         {
-            if (typeof(System.Windows.Controls.Button).Equals(sender.GetType()))
+            if (sender is Button)
             {
                 Button butn = sender as Button;
                 if (butn == butn_add)
                 {
-                    addFileToList();
+                    importFileToList();
                 }
                 else if (butn == butn_remove)
                 {
-                    /// <summary>
-                    /// 删除listview 的内容只能通过删除底层容器存放的内容实现 
-                    /// </summary>
-                    ICollectionView view = (ICollectionView)CollectionViewSource.GetDefaultView(fileView.ItemsSource);
-                    ObservableCollection<FileInfoView> itemsCollection = (ObservableCollection<FileInfoView>) view.SourceCollection;
                     while (fileView.SelectedItems.Count > 0)
                     {
-                        itemsCollection.Remove((FileInfoView)fileView.SelectedItem);
+                        fileView.Items.Remove(fileView.SelectedItem);
                     }
                     if (!fileView.HasItems)
                     {
@@ -590,7 +547,6 @@ namespace ZipCompression
                 uFlags |= SHFileInfoFlags.UseFileAttributes;
 
             int iTotal = (int)SHGetFileInfo(fileName, FileAttribute.Normal, ref shfi, (uint)Marshal.SizeOf(shfi), uFlags);
-            //或int iTotal = (int)SHGetFileInfo(fileName, 0, ref shfi, (uint)Marshal.SizeOf(shfi), uFlags);  
             Icon icon = null;
             if (iTotal > 0)
             {
