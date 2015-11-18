@@ -75,17 +75,7 @@ namespace ZipCompression
                 string path = folderDialog.SelectedPath;
                 string[] files = Directory.GetFileSystemEntries(path);
                 addFileToList(files);
-                if (fileView.HasItems) setButnIsEnabled(true);
             }
-        }
-        /// <summary>
-        /// 设置启用或禁用压缩和移除按钮
-        /// </summary>
-        /// <param name="isEnabled">true 启用，false 禁用</param>
-        private void setButnIsEnabled(bool isEnabled)
-        {
-            butn_compress.IsEnabled = isEnabled;
-            butn_remove.IsEnabled = isEnabled;
         }
         private void importFileToList()
         {
@@ -96,7 +86,6 @@ namespace ZipCompression
             {
                 string[] files = openFileDialog.FileNames;
                 addFileToList(files);
-                setButnIsEnabled(true);
             }
         }
 
@@ -166,36 +155,54 @@ namespace ZipCompression
             }
         }
 
-        private void button_Click(object sender, RoutedEventArgs e)
+        
+
+        private void CommandClose_Executed(object sender, ExecutedRoutedEventArgs e)
         {
-            if (sender is Button)
+            Close();
+            e.Handled = true;
+        }
+        private void CommandAddFile_Executed(object sender, ExecutedRoutedEventArgs e)
+        {
+            if (e.Parameter != null)
             {
-                Button butn = sender as Button;
-                if (butn == butn_add)
+                var type = e.Parameter as string;
+                if (type.Equals("file"))
                 {
                     importFileToList();
                 }
-                else if (butn == butn_remove)
+                else if (type.Equals("folder"))
                 {
-                    while (fileView.SelectedItems.Count > 0)
-                    {
-                        fileView.Items.Remove(fileView.SelectedItem);
-                    }
-                    if (!fileView.HasItems)
-                    {
-                        setButnIsEnabled(false);
-                    }
-                }
-                else if (butn == butn_compress)
-                {
-                    if (fileView.Items.Count > 0)
-                    {
-                        compressTo();
-                    }
+                    importDirectoryFilesToList();
                 }
             }
+            e.Handled = true;
         }
-
+        private void CommandCompressTo_Executed(object sender, ExecutedRoutedEventArgs e)
+        {
+            compressTo();
+            e.Handled = true;
+        }
+        private void CommandCompressToAndCommandRemoveFile_CanExecute(object sender, CanExecuteRoutedEventArgs e)
+        {
+            if (e.Source is ListView)
+            {
+                var target = e.Source as ListView;
+                e.CanExecute = target.HasItems;
+            }
+        }
+        private void CommandRemoveFile_Executed(object sender, ExecutedRoutedEventArgs e)
+        {
+            if (e.Source != null)
+            {
+                var target = e.Source as ListView;
+                while (target.SelectedItems.Count > 0)
+                {
+                    target.Items.Remove(fileView.SelectedItem);
+                }
+            }
+            e.Handled = true;
+        }
     }
 
     public delegate void CompressTo(string[] files, string destFileName);
@@ -358,7 +365,7 @@ namespace ZipCompression
         public static extern uint ExtractIconEx(string lpszFile, int nIconIndex, int[] phiconLarge, int[] phiconSmall, uint nIcons);
 
         [DllImport("User32.dll", EntryPoint = "DestroyIcon")]
-        public static extern int DestroyIcon(IntPtr hIcon);
+        private static extern int DestroyIcon(IntPtr hIcon);
 
         /// <summary>           
         /// 文件信息标识枚举类,所有枚举定义值前省略SHGFI投标，比如Icon 完整名称应为SHGFI_ICON           

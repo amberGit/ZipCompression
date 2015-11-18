@@ -7,18 +7,29 @@
         mc:Ignorable="d"
         Title="zip压缩器" Height="380" Width="550">
 
-
-    <Grid Margin="0,0,0,-3">
+    <Window.Resources>
+        <RoutedUICommand x:Key="AddFile" Text="添加文件"></RoutedUICommand>
+        <RoutedUICommand x:Key="RemoveFile" Text="移除文件"></RoutedUICommand>
+        <RoutedUICommand x:Key="CompressTo" Text="压缩文件" ></RoutedUICommand>
+    </Window.Resources>
+    <Window.CommandBindings>
+        <CommandBinding Command="ApplicationCommands.Close" Executed="CommandClose_Executed"></CommandBinding>
+        <CommandBinding Command="{StaticResource AddFile}" Executed="CommandAddFile_Executed"></CommandBinding>
+        <CommandBinding Command="{StaticResource CompressTo}" Executed="CommandCompressTo_Executed" CanExecute="CommandCompressToAndCommandRemoveFile_CanExecute"></CommandBinding>
+        <CommandBinding Command="{StaticResource RemoveFile}" Executed="CommandRemoveFile_Executed" CanExecute="CommandCompressToAndCommandRemoveFile_CanExecute" ></CommandBinding>
+    </Window.CommandBindings>
+    
+    <Grid Margin="0,0,0,0">
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="38*"/>
             <ColumnDefinition Width="489*"/>
         </Grid.ColumnDefinitions>
         <Menu x:Name="menu" HorizontalAlignment="Stretch" Height="22" VerticalAlignment="Top" Grid.ColumnSpan="2">
             <MenuItem Header="文件" Width="40">
-                <MenuItem Header="打开" HorizontalAlignment="Left" Width="150" Click="MenuItem_Click"/>
-                <MenuItem Header="打开文件夹" HorizontalAlignment="Left" Width="150" Click="MenuItem_Click"/>
-                <MenuItem Header="打包到..." HorizontalAlignment="Left" Width="150" Click="MenuItem_Click"/>
-                <MenuItem Header="退出" HorizontalAlignment="Left" Width="150" Click="MenuItem_Click"/>
+                <MenuItem Header="打开" HorizontalAlignment="Left" Width="150" Command="{StaticResource AddFile}" CommandParameter="file"/>
+                <MenuItem Header="打开文件夹" HorizontalAlignment="Left" Width="150" Command="{StaticResource AddFile}" CommandParameter="folder"/>
+                <MenuItem Header="打包到..." HorizontalAlignment="Left" Width="150" Command="{StaticResource CompressTo}" CommandTarget="{Binding ElementName=fileView}" />
+                <MenuItem Header="退出" HorizontalAlignment="Left" Width="150" Command="ApplicationCommands.Close" />
             </MenuItem>
             <MenuItem Header="编辑" Width="40"/>
         </Menu>
@@ -45,9 +56,9 @@
                 </GridView>
             </ListView.View>
         </ListView>
-        <Button x:Name="butn_add" Content="添加" HorizontalAlignment="Stretch" Height="27" Margin="8,272,366,32" VerticalAlignment="Stretch" Click="button_Click" Grid.Column="1"/>
-        <Button x:Name="butn_remove" Content="移除" IsEnabled="False" HorizontalAlignment="Stretch" Margin="167,272,207,32" VerticalAlignment="Stretch" Height="27" Click="button_Click" Grid.Column="1"/>
-        <Button x:Name="butn_compress" Content="压缩至..." IsEnabled="False" HorizontalAlignment="Stretch" Height="27" Margin="333,272,49,32" VerticalAlignment="Stretch"  Click="button_Click" Grid.Column="1"/>
+        <Button x:Name="butn_add" Content="添加" HorizontalAlignment="Stretch" Height="27" Margin="8,272,366,32" VerticalAlignment="Stretch" Command="{StaticResource AddFile}" CommandParameter="file" Grid.Column="1"/>
+        <Button x:Name="butn_remove" Content="移除"  HorizontalAlignment="Stretch" Margin="167,272,207,32" VerticalAlignment="Stretch" Height="27" Command="{StaticResource RemoveFile}" CommandTarget="{Binding ElementName=fileView}" Grid.Column="1"/>
+        <Button x:Name="butn_compress" Content="压缩至..."  HorizontalAlignment="Stretch" Height="27" Margin="333,272,49,32" VerticalAlignment="Stretch"  Command="{StaticResource CompressTo}" CommandTarget="{Binding ElementName=fileView}" Grid.Column="1"/>
         <StatusBar x:Name="SBar" Grid.Column="0" VerticalAlignment="Bottom" Background="LightBlue" Grid.ColumnSpan="2"  >
             <StatusBarItem>
                 <TextBlock>状态:</TextBlock>
