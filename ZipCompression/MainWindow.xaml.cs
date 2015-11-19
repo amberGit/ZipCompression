@@ -32,38 +32,17 @@ namespace ZipCompression
     {
         private ZipUtil zipUtil;
         private ZipEventListener listener;
+        private enum FileType
+        {
+            FILE,
+            FOLDER
+        };
         public MainWindow()
         {
             InitializeComponent();
             zipUtil = new ZipUtil();
             listener = new ZipEventListener(this, zipUtil);
             listener.On();
-        }
-
-        private void MenuItem_Click(object sender, RoutedEventArgs e)
-        {
-
-           if (sender is MenuItem)
-            {
-                MenuItem item = sender as MenuItem;
-                if (item.Header.Equals("打开"))
-                {
-                    importFileToList();
-                }
-                else if (item.Header.Equals("退出"))
-                {
-                    Close();
-                }
-                else if (item.Header.Equals("打包到..."))
-                {
-                    compressTo();
-                }
-                else if (item.Header.Equals("打开文件夹"))
-                {
-                    importDirectoryFilesToList();
-                }
-            }
-            
         }
 
         private void importDirectoryFilesToList()
