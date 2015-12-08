@@ -31,7 +31,7 @@ namespace ZipCompression
     public partial class MainWindow : Window
     {
         private ZipUtil zipUtil;
-        private ZipEventListener listener;
+        private ZipEventSource eventHandler;
         private enum FileType
         {
             FILE,
@@ -40,9 +40,9 @@ namespace ZipCompression
         public MainWindow()
         {
             InitializeComponent();
-            zipUtil = new ZipUtil();
-            listener = new ZipEventListener(this, zipUtil);
-            listener.On();
+            zipUtil = new ZipUtil(this);
+            eventHandler = new ZipEventSource();
+            eventHandler.Compress += zipUtil.compressTo;
         }
 
         private void importDirectoryFilesToList()
@@ -129,8 +129,8 @@ namespace ZipCompression
             System.Diagnostics.Debug.Assert(count > 0, "压缩文件列表为空");
             if (saveFileDialog.ShowDialog() == true)
             {
-                CompressTo compress = new CompressTo(zipUtil.compressTo);
-                compress(prepareToCompressFiles, saveFileDialog.FileName);
+                ZipEventSource.ZipEventArgs e = new ZipEventSource.ZipEventArgs(ZipEventSource.ZipEventValue.COMPRESS, prepareToCompressFiles, saveFileDialog.FileName);
+                eventHandler.OnZipEvent(this, e);
             }
         }
 
@@ -184,26 +184,31 @@ namespace ZipCompression
         }
     }
 
-    public delegate void CompressTo(string[] files, string destFileName);
 
-    public class ZipUtil: ZipEventSource
+    public class ZipUtil
     {
-
+        private ZipEventListener eventListener;
+        
         // 获得文件总共大小
         public long totalSize = 0L;
         // 当前已经压缩的流的大小
         public long compressedSize = 0L;
 
+        public ZipUtil(MainWindow window)
+        {
+            eventListener = new ZipEventListener(window);
+        }
         /// <summary>
         /// 压缩指定文件到指定路径
         /// </summary>
         /// <param name="files">指定的待压缩文件</param>
         /// <param name="destFileName">压缩路径</param>
-        public void compressTo(string[] files, string destFileName)
+        public void compressTo(object sender, ZipEventSource.ZipEventArgs e)
         {
+            string[] files = e.files;
+            string destFileName = e.filePath;
             totalSize = getFileTotalSize(files);
-            // 触发开始压缩事件
-            RaiseEvent(ZipEventValue.COMPRESS);
+            eventListener.HandlePrgressBar(null, new ZipEventListener.ZipProgressBarEventArgs(ZipEventListener.ZipProgressBarEventValue.BEGIN, 0));
             // 开始压缩操作
             using (ZipOutputStream outs = new ZipOutputStream(File.Create(destFileName)))
             {
@@ -235,7 +240,10 @@ namespace ZipCompression
             }
             return size;
         }
-
+        private int getProgressPercent()
+        {
+            return (int)Math.Ceiling(compressedSize * 1.0d / totalSize * 100);
+        }
         private void compress(string[] files, string parentFolder, ZipOutputStream outs, ref byte[] buffer, ref long compressedSize)
         {
             foreach (string file in files)
@@ -260,8 +268,19 @@ namespace ZipCompression
                         {
                             sourceBytes = bs.Read(buffer, 0, buffer.Length);
                             outs.Write(buffer, 0, sourceBytes);
+                            // set progress bar value
                             compressedSize += sourceBytes;
-                            RaiseEvent(ZipEventValue.UPDATE_BAR);
+                            ZipEventListener.ZipProgressBarEventArgs progressEventArgs;
+                            int percent = getProgressPercent();
+                            if (percent != 100)
+                            {
+                                progressEventArgs = new ZipEventListener.ZipProgressBarEventArgs(ZipEventListener.ZipProgressBarEventValue.PROGRESSING, percent);
+                            }
+                            else
+                            {
+                                progressEventArgs = new ZipEventListener.ZipProgressBarEventArgs(ZipEventListener.ZipProgressBarEventValue.FINISHED, percent);
+                            }
+                            eventListener.HandlePrgressBar(null, progressEventArgs);
                         } while (sourceBytes > 0);
                     }
                 }

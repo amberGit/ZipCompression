@@ -11,6 +11,7 @@
         <RoutedUICommand x:Key="AddFile" Text="添加文件"></RoutedUICommand>
         <RoutedUICommand x:Key="RemoveFile" Text="移除文件"></RoutedUICommand>
         <RoutedUICommand x:Key="CompressTo" Text="压缩文件" ></RoutedUICommand>
+        <ProgressBar x:Key="PBar" Maximum="100" Orientation="Horizontal" Width="200" Height="20"/>
     </Window.Resources>
     <Window.CommandBindings>
         <CommandBinding Command="ApplicationCommands.Close" Executed="CommandClose_Executed"></CommandBinding>

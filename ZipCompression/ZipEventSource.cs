@@ -8,11 +8,14 @@ namespace ZipCompression
     public class ZipEventSource
     {
 
+        public ZipEventSource()
+        {
+        }
+
         public enum ZipEventValue
         {
             COMPRESS,
-            DECOMPRESS,
-            UPDATE_BAR
+            DECOMPRESS
         }
         /// <summary>
         /// 定义事件参数
@@ -20,43 +23,36 @@ namespace ZipCompression
         public class ZipEventArgs : EventArgs
         {
             public readonly ZipEventValue EventValue;
-            public ZipEventArgs(ZipEventValue eventValue)
+            public readonly string[] files;
+            public readonly string filePath;
+            public ZipEventArgs(ZipEventValue eventValue, string[] files, string filePath)
             {
                 EventValue = eventValue;
+                this.files = files;
+                this.filePath = filePath;
             }
         }
 
         /// <summary>
-        /// 声明事件对象
+        /// 压缩
         /// </summary>
-        public event ZipEventHandler ZipEvent;
+        public event EventHandler<ZipEventArgs> Compress;
+
+        public event EventHandler<ZipEventArgs> DeCompress;
 
         /// <summary>
         /// 事件触发方法
         /// </summary>
         /// <param name="e"></param>
-        public virtual void OnZipEvent(ZipEventArgs e)
+        public virtual void OnZipEvent(object sender, ZipEventArgs e)
         {
-            if (ZipEvent != null)
-                ZipEvent(this, e);
+            if (e.EventValue == ZipEventValue.COMPRESS)
+                Compress(sender, e);
+            else if (e.EventValue == ZipEventValue.DECOMPRESS)
+                DeCompress(sender, e);
         }
 
-        /// <summary>
-        /// 引发事件
-        /// </summary>
-        /// <param name="eventValue"></param>
-        public void RaiseEvent(ZipEventValue eventValue)
-        {
-            ZipEventArgs e = new ZipEventArgs(eventValue);
-            OnZipEvent(e);
-        }
-
-        /// <summary>
-        /// 定义事件处理的委托
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="args"></param>
-        public delegate void ZipEventHandler(object sender, ZipEventArgs e);
+        
 
     }
 }
